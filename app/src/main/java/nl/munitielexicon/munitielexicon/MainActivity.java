@@ -9,20 +9,37 @@ import android.support.v4.widget.CursorAdapter;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.RelativeLayout;
+
+import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity {
 
     SearchView search;
 
-    static DatabaseHelper myDBHelper;
+    static DatabaseHelper myDbHelper;
     static boolean databaseOpened=false;
 
     SimpleCursorAdapter suggestionAdapter;
+
+    ArrayList<History> historyList;
+    RecyclerView recyclerView;
+    RecyclerView.LayoutManager layoutManager;
+    RecyclerView.Adapter historyAdapter;
+
+    RelativeLayout emptyHistory;
+    Cursor cursorHistory;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,18 +51,18 @@ public class MainActivity extends AppCompatActivity {
 
         search =  (SearchView) findViewById(R.id.search_view);
 
-        search.setOnClickListener(new View.OnClickListener(){
+        search.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v)
             {
                 search.setIconified(false);
-
             }
         });
 
-        myDBHelper = new DatabaseHelper(this);
 
-        if (myDBHelper.checkDataBase())
+        myDbHelper = new DatabaseHelper(this);
+
+        if(myDbHelper.checkDataBase())
         {
             openDatabase();
 
@@ -57,7 +74,9 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
-        //setup SimpleCursorAdapter
+
+
+        // setup SimpleCursorAdapter
 
         final String[] from = new String[] {"mun_afkorting"};
         final int[] to = new int[] {R.id.suggestion_text};
@@ -74,12 +93,6 @@ public class MainActivity extends AppCompatActivity {
         search.setSuggestionsAdapter(suggestionAdapter);
 
         search.setOnSuggestionListener(new SearchView.OnSuggestionListener() {
-            @Override
-            public boolean onSuggestionSelect(int position) {
-                //Your code here
-                return true;
-            }
-
             @Override
             public boolean onSuggestionClick(int position) {
 
@@ -103,110 +116,191 @@ public class MainActivity extends AppCompatActivity {
 
                 return true;
             }
+
+            @Override
+            public boolean onSuggestionSelect(int position) {
+                // Your code here
+                return true;
+            }
         });
 
         search.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query)
             {
-                String text = search.getQuery().toString();
+                String text =  search.getQuery().toString();
 
-                Cursor c = myDBHelper.getMeaning(text);
+                Pattern p = Pattern.compile("[A-Za-z \\-.]{1,25}");
+                Matcher m = p.matcher(text);
 
-                if (c.getCount()==0)
-                {
-                    search.setQuery("",false);
+                if(m.matches()) {
 
-                    AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this, R.style.MyDialogTheme);
-                    builder.setTitle("Word Not Found");
-                    builder.setMessage("Please search again");
+                    Cursor c = myDbHelper.getMeaning(text);
 
-                    String positiveText = getString(android.R.string.ok);
-                    builder.setPositiveButton(positiveText,
-                            new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    // positive button logic
-                                }
-                            });
 
-                    String negativeText = getString(android.R.string.cancel);
-                    builder.setNegativeButton(negativeText,
-                            new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    search.clearFocus();
-                                }
-                            });
+                    if (c.getCount() == 0) {
+                        showAlertDialog();
+                    } else {
+                        //search.setQuery("",false);
+                        search.clearFocus();
+                        search.setFocusable(false);
 
-                    AlertDialog dialog = builder.create();
-                    // display dialog
-                    dialog.show();
+                        Intent intent = new Intent(MainActivity.this, WordMeaningActivity.class);
+                        Bundle bundle = new Bundle();
+                        bundle.putString("mun_afkorting", text);
+                        intent.putExtras(bundle);
+                        startActivity(intent);
+
+                    }
                 }
-
                 else
                 {
-                    //search.setQuery("",false);
-                    search.clearFocus();
-                    search.setFocusable(false);
+                    showAlertDialog();
+                }
 
-                    Intent intent = new Intent(MainActivity.this, WordMeaningActivity.class);
-                    Bundle bundle = new Bundle();
-                    bundle.putString("mun_afkorting",text);
-                    intent.putExtras(bundle);
-                    startActivity(intent);
+                return false;
+            }
+
+
+            @Override
+            public boolean onQueryTextChange(final String s) {
+
+                search.setIconifiedByDefault(false); //Give Suggestion list margins
+
+                Pattern p = Pattern.compile("[A-Za-z \\-.]{1,25}");
+                Matcher m = p.matcher(s);
+
+                if(m.matches()) {
+                    Cursor cursorSuggestion=myDbHelper.getSuggestions(s);
+                    suggestionAdapter.changeCursor(cursorSuggestion);
                 }
 
 
                 return false;
             }
 
-            @Override
-            public boolean onQueryTextChange(String s) {
-                search.setIconifiedByDefault(false); //Give Suggestion list margins
-                Cursor cursorSuggestion=myDBHelper.getSuggestions(s);
-                suggestionAdapter.changeCursor(cursorSuggestion);
-
-                return false;
-            }
         });
 
+        emptyHistory = (RelativeLayout) findViewById(R.id.empty_history);
 
-        }
+        //recycler View
+        recyclerView = (RecyclerView)findViewById(R.id.recycler_view_history);
+        layoutManager = new LinearLayoutManager(MainActivity.this);
+
+        recyclerView.setLayoutManager(layoutManager);
+
+        fetch_history();
+
+
+
+    }
 
     protected static void openDatabase()
     {
         try {
-            myDBHelper.openDataBase();
+            myDbHelper.openDataBase();
             databaseOpened=true;
-        }catch (SQLException e){
+        } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
+    private void fetch_history()
+    {
+        historyList = new ArrayList<>();
+        historyAdapter = new RecyclerViewAdapterHistory(this, historyList);
+        recyclerView.setAdapter(historyAdapter);
+
+        History h;
+
+        if(databaseOpened)
+        {
+            cursorHistory = myDbHelper.getHistory();
+            if (cursorHistory.moveToFirst())
+                do {
+                h = new History(cursorHistory.getString(cursorHistory.getColumnIndex("afkorting")),cursorHistory.getString(cursorHistory.getColumnIndex("mun_definitie")));
+                historyList.add(h);
+            }
+            while (cursorHistory.moveToNext());
+        }
+
+        historyAdapter.notifyDataSetChanged();
+
+        if (historyAdapter.getItemCount() == 0)
+        {
+            emptyHistory.setVisibility(View.VISIBLE);
+        }
+        else
+        {
+            emptyHistory.setVisibility(View.GONE);
+        }
+    }
+
+    private void showAlertDialog()
+    {
+        search.setQuery("",false);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this, R.style.MyDialogTheme);
+        builder.setTitle("Word Not Found");
+        builder.setMessage("Please search again");
+
+        String positiveText = getString(android.R.string.ok);
+        builder.setPositiveButton(positiveText,
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        // positive button logic
+                    }
+                });
+
+        String negativeText = getString(android.R.string.cancel);
+        builder.setNegativeButton(negativeText,
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        search.clearFocus();
+                    }
+                });
+
+        AlertDialog dialog = builder.create();
+        // display dialog
+        dialog.show();
+
+    }
+
+
+
+
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        //Inflate the menu_main; this adds items to the action bar if its present.
+        // Inflate the menu_main; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        //handle action bar item clicks here. The action bar will
-        //automatically handle clicks on the home/Up button
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button
         int id = item.getItemId();
-
         if (id == R.id.action_settings) {
             Intent intent = new Intent(MainActivity.this,SettingsActivity.class);
             startActivity(intent);
             return true;
         }
 
-        if (id==R.id.action_exit) {
+        if (id == R.id.action_exit) {
             System.exit(0);
             return true;
         }
         return super.onOptionsItemSelected(item);
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        fetch_history();
+    }
+
 }

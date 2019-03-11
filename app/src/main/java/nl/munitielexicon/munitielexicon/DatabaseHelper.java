@@ -16,8 +16,8 @@ import java.io.OutputStream;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
 
-    private String DB_PATH = null;
-    private static String DB_NAME = "munitie1.db";
+    private static String DB_PATH = null;
+    private static String DB_NAME = "munitie2.db";
     private SQLiteDatabase myDataBase;
     private final Context myContext;
 
@@ -49,6 +49,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     public boolean checkDataBase() {
         SQLiteDatabase checkDB = null;
+
         try {
             String myPath = DB_PATH + DB_NAME;
             checkDB = SQLiteDatabase.openDatabase(myPath, null, SQLiteDatabase.OPEN_READONLY);
@@ -118,9 +119,26 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
     public Cursor getSuggestions(String text)
     {
-        Cursor c= myDataBase.rawQuery("SELECT _id, mun_afkorting FROM Afkortingen WHERE mun_afkorting LIKE '"+text+"%' LIMIT 40",null);
+        Cursor c= myDataBase.rawQuery("SELECT _id, mun_afkorting FROM afkortingen WHERE mun_afkorting LIKE '"+text+"%' LIMIT 40",null);
         return c;
     }
+
+    public void  insertHistory(String text) {
+        myDataBase.execSQL("INSERT INTO history(afkorting) VALUES(UPPER('" + text + "'))");
+    }
+
+    public Cursor getHistory()
+    {
+        Cursor c= myDataBase.rawQuery("select distinct  afkorting, mun_definitie from history h join afkortingen w on h.afkorting==w.mun_afkorting order by h._id desc",null);
+        return c;
+    }
+
+
+    public void  deleteHistory()
+    {
+        myDataBase.execSQL("DELETE  FROM history");
+    }
+
 
 
 

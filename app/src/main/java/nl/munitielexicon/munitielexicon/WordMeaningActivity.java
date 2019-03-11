@@ -1,6 +1,9 @@
 package nl.munitielexicon.munitielexicon;
 
+import android.database.Cursor;
+import android.database.SQLException;
 import android.os.Bundle;
+import android.speech.tts.TextToSpeech;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -8,10 +11,14 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.ImageButton;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import nl.munitielexicon.munitielexicon.fragments.FragmentBetekenis;
 import nl.munitielexicon.munitielexicon.fragments.FragmentCategorie;
@@ -22,14 +29,78 @@ public class WordMeaningActivity extends AppCompatActivity {
 
     private ViewPager viewPager;
 
+    String munafkorting;
+    DatabaseHelper myDbHelper;
+    Cursor c = null;
+
+    public String mundefinitie;
+    public String munbetekenis;
+    public String image;
+    public String categorie;
+
+    TextToSpeech tts;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_word_meaning);
 
+        //received values
+        Bundle bundle = getIntent().getExtras();
+        munafkorting= bundle.getString("mun_afkorting");
+
+        myDbHelper = new DatabaseHelper(this);
+
+        try {
+            myDbHelper.openDataBase();
+        } catch (SQLException sqle) {
+            throw sqle;
+        }
+
+
+        c = myDbHelper.getMeaning(munafkorting);
+
+        if (c.moveToFirst()) {
+
+            mundefinitie= c.getString(c.getColumnIndex("mun_definition"));
+            munbetekenis=c.getString(c.getColumnIndex("mun_betekenis"));
+            image=c.getString(c.getColumnIndex("image"));
+            categorie=c.getString(c.getColumnIndex("categorie"));
+
+        }
+
+        myDbHelper.insertHistory(munafkorting);
+
+        ImageButton btnSpeak = (ImageButton) findViewById(R.id.btnSpeak);
+
+        btnSpeak.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                tts = new TextToSpeech(WordMeaningActivity.this, new TextToSpeech.OnInitListener() {
+                    @Override
+                    public void onInit(int status) {
+                        // TODO Auto-generated method stub
+                        if(status == TextToSpeech.SUCCESS){
+                            int result=tts.setLanguage(Locale.getDefault());
+                            if(result==TextToSpeech.LANG_MISSING_DATA || result==TextToSpeech.LANG_NOT_SUPPORTED){
+                                Log.e("error", "This Language is not supported");
+                            }
+                            else{
+                                tts.speak(munafkorting, TextToSpeech.QUEUE_FLUSH, null);
+                            }
+                        }
+                        else
+                            Log.e("error", "Initialization Failed!");
+                    }
+                });
+            }
+        });
+
+
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.mToolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setTitle("afkortingen");
+        getSupportActionBar().setTitle(munafkorting);
 
         toolbar.setNavigationIcon(R.drawable.ic_arrow_back);
 
