@@ -35,7 +35,7 @@ public class FragmentImage extends Fragment {
         }
         if(image==null)
         {
-            text.setText("Geen image gevonden");
+            text.setText("No image found");
         }
         return view;
     }

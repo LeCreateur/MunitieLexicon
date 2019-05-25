@@ -114,7 +114,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
     public Cursor getMeaning(String text)
     {
-        Cursor c= myDataBase.rawQuery("SELECT mun_definitie,mun_betekenis,categorie,image FROM afkortingen WHERE mun_afkortingen==UPPER('"+text+"')",null);
+        Cursor c= myDataBase.rawQuery("SELECT mun_definitie,mun_betekenis,categorie,image FROM afkortingen WHERE mun_afkorting==UPPER('"+text+"')",null);
         return c;
     }
     public Cursor getSuggestions(String text)

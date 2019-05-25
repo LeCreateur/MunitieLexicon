@@ -35,7 +35,7 @@ public class FragmentCategorie extends Fragment {
         }
         if(categorie==null)
         {
-            text.setText("Geen categorie gevonden");
+            text.setText("No category found");
         }
         return view;
     }

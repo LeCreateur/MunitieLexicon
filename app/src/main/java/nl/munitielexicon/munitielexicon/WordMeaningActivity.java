@@ -62,7 +62,7 @@ public class WordMeaningActivity extends AppCompatActivity {
 
         if (c.moveToFirst()) {
 
-            mundefinitie= c.getString(c.getColumnIndex("mun_definition"));
+            mundefinitie= c.getString(c.getColumnIndex("mun_definitie"));
             munbetekenis=c.getString(c.getColumnIndex("mun_betekenis"));
             image=c.getString(c.getColumnIndex("image"));
             categorie=c.getString(c.getColumnIndex("categorie"));
@@ -170,9 +170,9 @@ public class WordMeaningActivity extends AppCompatActivity {
 
     private void setupViewPager(ViewPager viewPager){
         ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
-        adapter.addFrag(new FragmentDefinition(), "Definitie");
-        adapter.addFrag(new FragmentBetekenis(), "Betekenis");
-        adapter.addFrag(new FragmentCategorie(), "Categorie");
+        adapter.addFrag(new FragmentDefinition(), "Definition");
+        adapter.addFrag(new FragmentBetekenis(), "Meaning");
+        adapter.addFrag(new FragmentCategorie(), "Category");
         adapter.addFrag(new FragmentImage(), "Image");
         viewPager.setAdapter(adapter);
     }

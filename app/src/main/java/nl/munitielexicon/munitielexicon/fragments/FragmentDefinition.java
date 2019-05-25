@@ -32,7 +32,7 @@ public class FragmentDefinition extends Fragment {
 
         if(mun_definitie==null)
         {
-            text.setText("Geen definitie gevonden");
+            text.setText("No definition found");
         }
 
         return view;

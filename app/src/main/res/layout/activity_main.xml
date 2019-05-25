@@ -14,7 +14,7 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="#2196F3"
+            android:background="#B7162C"
             app:title="Munitie Lexicon"
             app:popupTheme="@style/ThemeOverlay.AppCompat.Light"/>
 
@@ -22,8 +22,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:background="#2196F3"
-            >
+            android:background="#B7162C">
+
             <android.support.v7.widget.SearchView
                 android:id="@+id/search_view"
                 android:layout_width="match_parent"
@@ -37,8 +37,7 @@
                 android:clickable="true"
                 android:focusable="true"
                 app:queryHint="Type Word..."
-                app:searchIcon="@drawable/ic_search"
-                />
+                app:searchIcon="@drawable/ic_search" />
 
 
         </LinearLayout>
@@ -51,31 +50,32 @@
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     android:orientation="vertical">
 
-    <RelativeLayout
+        <RelativeLayout
         android:id="@+id/empty_history"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
         android:layout_marginTop="150dp"
         android:visibility="visible">
-        <TextView
+
+            <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Afkortingen die je recentelijk hebt gezocht zie je hier..."
+            android:text="Abbreviations and terms that you recently searched for..."
             android:textAlignment="center"
             android:textColor="#313131"
-            android:textSize="22sp"
-            />
-    </RelativeLayout>
+            android:textSize="22sp" />
 
-    <android.support.v7.widget.RecyclerView
+        </RelativeLayout>
+
+        <android.support.v7.widget.RecyclerView
         android:id="@+id/recycler_view_history"
         android:layout_margin="5dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:scrollbars="vertical" />
 
-</LinearLayout>
+    </LinearLayout>
 
 </android.support.design.widget.CoordinatorLayout>
 

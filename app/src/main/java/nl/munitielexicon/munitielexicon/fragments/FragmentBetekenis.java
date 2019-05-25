@@ -32,7 +32,7 @@ public class FragmentBetekenis extends Fragment {
 
         if(mun_betekenis==null)
         {
-            text.setText("Geen betekenis gevonden");
+            text.setText("No meaning found");
         }
         return view;
     }

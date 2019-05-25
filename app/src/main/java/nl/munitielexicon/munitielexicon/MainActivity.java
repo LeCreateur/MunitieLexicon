@@ -40,7 +40,6 @@ public class MainActivity extends AppCompatActivity {
     Cursor cursorHistory;
 
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -72,7 +71,6 @@ public class MainActivity extends AppCompatActivity {
             LoadDatabaseAsync task = new LoadDatabaseAsync(MainActivity.this);
             task.execute();
         }
-
 
 
 
